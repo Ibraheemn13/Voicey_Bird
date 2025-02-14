@@ -444,40 +444,43 @@
                 fetch('/api/get-deepgram-key')
                     .then(response => response.json())
                     .then(data => {
-                        const socket = new WebSocket(`wss://api.deepgram.com/v1/listentoken=${data.key}`);
+                        const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?access_token=${data.key}`);
 
                         socket.onopen = () => console.log('Connected to Deepgram');
                         socket.onerror = (error) => console.error('Deepgram error:', error);
+
+                        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                                alert('Browser not supported');
+                                return;
+                            }
+                            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+                            mediaRecorder.addEventListener('dataavailable', (event) => {
+                                if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+                                    socket.send(event.data);
+                                }
+                            });
+
+                            mediaRecorder.start(250); // Stream data every 250ms
+                        });
+
+                        socket.onmessage = (message) => {
+                            const received = JSON.parse(message.data);
+                            const transcript = received.channel.alternatives[0].transcript;
+                            if (transcript && received.is_final) {
+                                console.log('Transcript:', transcript);
+
+                                // Trigger game jump if "jump" is detected
+                                if (transcript.toLowerCase().includes("jump")) {
+                                    Birdy.jump();
+                                    Birdy.hover();
+                                }
+                            }
+                        };
                     })
                     .catch(error => console.error('Failed to fetch Deepgram key:', error));
 
-
-                socket.onopen = () => {
-                    console.log('Connected to Deepgram');
-                    mediaRecorder.addEventListener('dataavailable', async (event) => {
-                        if (event.data.size > 0 && socket.readyState == 1) {
-                            socket.send(event.data);
-                        }
-                    });
-                    mediaRecorder.start(250); // Reduced interval to 250ms for faster response
-                };
-
-                socket.onmessage = (message) => {
-                    const received = JSON.parse(message.data);
-                    const transcript = received.channel.alternatives[0].transcript;
-                    if (transcript && received.is_final) {
-                        console.log(transcript);
-
-                        // Display the transcript in the game
-                        $('#TranscriptDisplay').text(transcript).fadeIn().delay(1000).fadeOut();
-
-                        // Make the bird flap and hover if "jump" is detected
-                        if (transcript.toLowerCase().includes("jump")) {
-                            Birdy.jump();
-                            Birdy.hover(); // Enable hover mode
-                        }
-                    }
-                };
 
                 socket.onclose = () => {
                     console.log('Deepgram connection closed');
