@@ -3,6 +3,8 @@
 
 Voicey Bird is a flappy bird game with Deepgram’s real-time speech recognition API to make it voice-controlled. I then deployed it on Vercel, making it publicly accessible.
 
+#### Read More about it on MEDIUM: https://medium.com/@ibraheemn13/voice-controlled-flappy-bird-game-with-deepgram-vercel-177ce2020e2a
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Voicey Bird | Tools & Technology
