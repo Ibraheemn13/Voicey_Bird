@@ -444,7 +444,7 @@
                 fetch('/api/get-deepgram-key')
                     .then(response => response.json())
                     .then(data => {
-                        const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?access_token=${data.key}`);
+                        const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?token=${data.key}`);
 
                         socket.onopen = () => console.log('Connected to Deepgram');
                         socket.onerror = (error) => console.error('Deepgram error:', error);
